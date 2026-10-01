@@ -1,28 +1,102 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mi Barrio - Piloto</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css"/>
-<style>body{margin:0} #map{height:100vh} button{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1000; padding:15px 25px; background:#ff6b00; color:white; border:none; border-radius:30px; font-size:18px; font-weight:bold; cursor:pointer}</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Barrio Piloto</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  body { margin:0; font-family: sans-serif; }
+  #map { height: 100vh; width: 100vw; }
+  #btn {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; background: #FF5722; color: white; border: none;
+    padding: 18px 28px; border-radius: 30px; font-size: 18px; font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  #status {
+    position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; background: white; padding: 10px 18px; border-radius: 20px;
+    display: none;
+  }
+  #where {
+    position: fixed; top: 60px; right: 15px; z-index: 1000;
+    background: #2196F3; color: white; border: none; padding: 10px 16px;
+    border-radius: 20px; font-weight: bold; display: none;
+  }
+</style>
 </head>
 <body>
 <div id="map"></div>
-<button id="btn">🚗 GUARDE MI AUTO ACA</button>
-<script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
+<div id="status"></div>
+<button id="where" onclick="irAlAuto()">📍 VER MI AUTO</button>
+<button id="btn" onclick="guardarAuto()">🚗 GUARDE MI AUTO ACA</button>
+
 <script>
-var map = L.map('map').setView([-34.8085, -58.4755], 17);
+const MONTE_GRANDE = [-34.815, -58.47];
+let map = L.map('map').setView(MONTE_GRANDE, 16);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-var auto = JSON.parse(localStorage.getItem('auto'));
-if(auto) L.marker(auto).addTo(map).bindPopup("Tu auto esta aca").openPopup();
-document.getElementById('btn').onclick = function(){
-navigator.geolocation.getCurrentPosition(pos => {
-var latlng = [pos.coords.latitude, pos.coords.longitude];
-localStorage.setItem('auto', JSON.stringify(latlng));
-L.marker(latlng).addTo(map).bindPopup("Auto guardado!").openPopup();
-alert("Auto guardado!");
-});
+
+let miUbicacion = null;
+let marcadorMio = null;
+let marcadorAuto = null;
+
+function showStatus(txt, ms=3000){
+  const el = document.getElementById('status');
+  el.textContent = txt; el.style.display='block';
+  if(ms) setTimeout(()=> el.style.display='none', ms);
 }
+
+function actualizarMiPosicion(pos){
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  miUbicacion = {lat, lng};
+  if(!marcadorMio){
+    marcadorMio = L.circleMarker([lat,lng], {radius:10, color:'white', fillColor:'#2196F3', fillOpacity:1, weight:3}).addTo(map);
+    map.setView([lat,lng], 18);
+    showStatus(`GPS: ${Math.round(pos.coords.accuracy)}m preciso`);
+  } else {
+    marcadorMio.setLatLng([lat,lng]);
+  }
+}
+
+function iniciarGPS(){
+  showStatus("Buscando tu ubicación REAL...", 0);
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{ actualizarMiPosicion(pos); document.getElementById('status').style.display='none';
+      navigator.geolocation.watchPosition(actualizarMiPosicion, null, {enableHighAccuracy:true, maximumAge:0});
+    },
+    (err)=>{ showStatus("Activa GPS: "+err.message, 5000); },
+    {enableHighAccuracy:true, maximumAge:0, timeout:15000}
+  );
+}
+
+function guardarAuto(){
+  if(!miUbicacion){ showStatus("Esperando GPS real..."); iniciarGPS(); return; }
+  navigator.geolocation.getCurrentPosition((pos)=>{
+    const data = {lat: pos.coords.latitude, lng: pos.coords.longitude, time: new Date().toISOString()};
+    localStorage.setItem('miAuto', JSON.stringify(data));
+    if(marcadorAuto) map.removeLayer(marcadorAuto);
+    marcadorAuto = L.marker([data.lat, data.lng]).addTo(map).bindPopup(`<b>Auto guardado!</b><br>${new Date().toLocaleString('es-AR')}`).openPopup();
+    map.setView([data.lat, data.lng], 19);
+    document.getElementById('where').style.display='block';
+    showStatus("✅ Auto guardado con GPS real!", 4000);
+  }, null, {enableHighAccuracy:true, maximumAge:0, timeout:10000});
+}
+
+function irAlAuto(){
+  const raw = localStorage.getItem('miAuto');
+  if(!raw) return;
+  const d = JSON.parse(raw); map.setView([d.lat, d.lng], 19);
+}
+
+try{
+  const raw = localStorage.getItem('miAuto');
+  if(raw){ const d = JSON.parse(raw); marcadorAuto = L.marker([d.lat, d.lng]).addTo(map); document.getElementById('where').style.display='block'; }
+}catch(e){}
+
+iniciarGPS();
 </script>
 </body>
 </html>
