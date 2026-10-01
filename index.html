@@ -1,101 +1,93 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Mi Barrio Piloto PRO</title>
-<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png?v=4">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3202/3202926.png?v=4">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>¿Dónde Dejé? - EZEIZA</title>
 <meta name="theme-color" content="#FF5722">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 body{margin:0;font-family:sans-serif;overflow:hidden}
 #map{height:100vh;width:100vw}
-.panel{position:fixed;left:10px;right:10px;bottom:90px;z-index:1000;background:white;border-radius:18px;padding:14px;box-shadow:0 8px 25px rgba(0,0,0,.25);display:none}
-#btnMain{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:1001;background:#FF5722;color:white;border:none;padding:18px 26px;border-radius:30px;font-size:17px;font-weight:bold;box-shadow:0 4px 15px rgba(0,0,0,.3)}
-.topBtn{position:fixed;top:10px;z-index:1000;padding:10px 14px;border-radius:20px;border:none;font-weight:bold;color:white}
-#btnVer{right:10px;background:#2196F3;display:none}
-#btnCompass{left:10px;background:#4CAF50;display:none}
-#compass{font-size:50px;text-align:center;transition:transform .3s}
-.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.top{position:fixed;top:0;left:0;right:0;z-index:1000;background:white;padding:10px;display:flex;gap:6px;overflow-x:auto;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.top button{padding:10px 14px;border-radius:20px;border:2px solid #ddd;background:white;font-weight:bold;white-space:nowrap}
+.top button.active{background:#FF5722;color:white;border-color:#FF5722}
+.floors{position:fixed;top:60px;left:0;right:0;z-index:999;background:#fff3e0;padding:8px;display:flex;gap:6px;overflow-x:auto}
+.floors button{padding:8px 12px;border-radius:15px;border:none;background:#ffe0b2;font-weight:bold}
+.floors button.active{background:#FF5722;color:white}
+#btnMain{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:1001;background:#FF5722;color:white;border:none;padding:18px 26px;border-radius:30px;font-size:17px;font-weight:bold;box-shadow:0 4px 15px rgba(0,0,0,.3);width:90%;max-width:340px}
+.panel{position:fixed;bottom:85px;left:10px;right:10px;z-index:1000;background:white;border-radius:18px;padding:14px;box-shadow:0 8px 25px rgba(0,0,0,.25);display:none}
+#compass{font-size:40px;text-align:center}
+.row{display:flex;gap:8px;margin-top:10px}
 .row button{flex:1;padding:12px;border-radius:12px;border:none;font-weight:bold}
-.b1{background:#FFE0B2}.b2{background:#B3E5FC}.b3{background:#C8E6C9}.b4{background:#FFCDD2}
-#fotoPrev{width:100%;max-height:150px;object-fit:cover;border-radius:12px;margin-top:8px;display:none}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<button id="btnVer" class="topBtn" onclick="irAlAuto()">📍 MI AUTO</button>
-<button id="btnCompass" class="topBtn" onclick="togglePanel()">🧭 BRÚJULA</button>
+<div class="top">
+  <button id="bE1" class="active" onclick="setPlaya('E1')">E1 MULTINIVEL</button>
+  <button id="bE2" onclick="setPlaya('E2')">E2</button>
+  <button id="bE3" onclick="setPlaya('E3')">E3 EMPLEADOS</button>
+  <button id="bE4" onclick="setPlaya('E4')">E4 LARGA</button>
+</div>
+<div class="floors" id="floors"></div>
 
 <div id="panel" class="panel">
+  <div style="text-align:center;font-weight:bold" id="info">E1 - PB</div>
   <div id="compass">🧭</div>
-  <div id="infoDist" style="text-align:center;font-weight:bold">Buscando...</div>
-  <img id="fotoPrev" />
+  <div id="dist" style="text-align:center"></div>
+  <img id="foto" style="width:100%;max-height:130px;border-radius:12px;display:none;margin-top:8px">
   <div class="row">
-    <button class="b1" onclick="tomarFoto()">📸 Foto</button>
-    <button class="b2" onclick="compartir()">📤 Compartir</button>
+    <button style="background:#FFE0B2" onclick="tomarFoto()">📸 Foto Columna</button>
+    <button style="background:#B3E5FC" onclick="compartir()">📤 Compartir</button>
   </div>
   <div class="row">
-    <button class="b3" onclick="ponerAlarma(60)">⏰ 1 hora</button>
-    <button class="b3" onclick="ponerAlarma(120)">⏰ 2 horas</button>
-    <button class="b4" onclick="borrar()">🗑️ Borrar</button>
+    <button style="background:#C8E6C9" onclick="pagar()">💳 PAGAR PARKING AA2000</button>
+    <button style="background:#FFCDD2" onclick="borrar()">🗑️</button>
   </div>
 </div>
 
-<button id="btnMain" onclick="guardarAuto()">🚗 GUARDAR MI AUTO ACA</button>
+<button id="btnMain" onclick="guardar()">🚗 GUARDAR AUTO ACA - E1 PB</button>
 <input type="file" id="inputFoto" accept="image/*" capture="environment" style="display:none">
 
 <script>
-const MG=[-34.815,-58.47]; let map=L.map('map').setView(MG,16);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-let miUbicacion=null,mMio=null,mAuto=null,watchId=null,lastFoto=null;
+const EZE = {E1: [-34.8123,-58.5358], E2: [-34.8135,-58.5372], E3: [-34.8108,-58.5340], E4: [-34.8155,-58.5390]};
+let playa='E1', piso='PB', map=L.map('map',{zoomControl:false}).setView(EZE.E1,17);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{opacity:0.4}).addTo(map);
+let mAuto=null,mMio=null,miUb=null,lastFoto=null;
 
-function dist(lat1,lon1,lat2,lon2){ const R=6371e3; const a=lat1*Math.PI/180,b=lat2*Math.PI/180; const dLat=(lat2-lat1)*Math.PI/180; const dLon=(lon2-lon1)*Math.PI/180; const h=Math.sin(dLat/2)**2+Math.cos(a)*Math.cos(b)*Math.sin(dLon/2)**2; return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
-function bearing(lat1,lon1,lat2,lon2){ const y=Math.sin((lon2-lon1)*Math.PI/180)*Math.cos(lat2*Math.PI/180); const x=Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180)-Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos((lon2-lon1)*Math.PI/180); return (Math.atan2(y,x)*180/Math.PI+360)%360;}
+const pisosByPlaya={E1:['PB','1','2','-1','-2'],E2:['PB','-1','-2'],E3:['PB'],E4:['PB']};
 
-function actualizarCompass(){
-  const raw=localStorage.getItem('miAuto'); if(!raw||!miUbicacion) return;
-  const d=JSON.parse(raw); const di=dist(miUbicacion.lat,miUbicacion.lng,d.lat,d.lng); const be=bearing(miUbicacion.lat,miUbicacion.lng,d.lat,d.lng);
-  document.getElementById('infoDist').innerText=`${di<1000?Math.round(di)+' m':(di/1000).toFixed(2)+' km'} - Rumbo ${Math.round(be)}°`;
-  document.getElementById('compass').style.transform=`rotate(${be}deg)`;
-  if(di<20) document.getElementById('infoDist').innerText='¡ESTAS AL LADO DEL AUTO! 🎉 '+document.getElementById('infoDist').innerText;
+function renderPisos(){
+  const c=document.getElementById('floors'); c.innerHTML='';
+  pisosByPlaya[playa].forEach(p=>{
+    const b=document.createElement('button'); b.innerText=p==='PB'?'PLANTA BAJA':p>0?p+'° PISO':p+' SUBSUELO'; b.className=p===piso?'active':''; b.onclick=()=>{piso=p;renderPisos();updBtn();}; c.appendChild(b);
+  });
 }
+function setPlaya(p){ playa=p; piso=pisosByPlaya[p][0]; document.querySelectorAll('.top button').forEach(b=>b.classList.remove('active')); document.getElementById('b'+p).classList.add('active'); map.setView(EZE[p],18); renderPisos(); updBtn(); }
+function updBtn(){ document.getElementById('btnMain').innerText=`🚗 GUARDAR AUTO ACA - ${playa} ${piso}`; document.getElementById('info').innerText=`${playa} - ${piso}`; }
 
-function upd(p){ miUbicacion={lat:p.coords.latitude,lng:p.coords.longitude}; if(!mMio){ mMio=L.circleMarker([miUbicacion.lat,miUbicacion.lng],{radius:10,color:'white',fillColor:'#2196F3',fillOpacity:1,weight:3}).addTo(map); map.setView([miUbicacion.lat,miUbicacion.lng],18);} else mMio.setLatLng([miUbicacion.lat,miUbicacion.lng]); actualizarCompass();}
-
-function guardarAuto(){
-  navigator.geolocation.getCurrentPosition(p=>{
-    const data={lat:p.coords.latitude,lng:p.coords.longitude,time:new Date().toISOString(),foto:lastFoto||localStorage.getItem('miAutoFoto')||null};
-    localStorage.setItem('miAuto',JSON.stringify(data));
-    if(mAuto) map.removeLayer(mAuto); mAuto=L.marker([data.lat,data.lng]).addTo(map).bindPopup('🚗 Auto acá').openPopup();
-    map.setView([data.lat,data.lng],19);
-    document.getElementById('btnVer').style.display='block'; document.getElementById('btnCompass').style.display='block';
+function guardar(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const data={lat:pos.coords.latitude,lng:pos.coords.longitude,playa,piso,time:new Date().toISOString(),foto:lastFoto||localStorage.getItem('fotoEZE')||null};
+    localStorage.setItem('autoEZE',JSON.stringify(data));
+    if(mAuto) map.removeLayer(mAuto); mAuto=L.marker([data.lat,data.lng]).addTo(map).bindPopup(`🚗 ${playa} ${piso}`).openPopup();
     document.getElementById('panel').style.display='block';
-    if(data.foto){ const im=document.getElementById('fotoPrev'); im.src=data.foto; im.style.display='block';}
-    alert('✅ Auto guardado! Brújula y fotos activadas');
-  },null,{enableHighAccuracy:true});
+    if(data.foto){ const im=document.getElementById('foto'); im.src=data.foto; im.style.display='block'; }
+    alert(`✅ Guardado en ${playa} ${piso}`);
+  },{},{enableHighAccuracy:true});
 }
-
-function irAlAuto(){ const r=localStorage.getItem('miAuto'); if(!r) return; const d=JSON.parse(r); map.setView([d.lat,d.lng],19); document.getElementById('panel').style.display='block';}
-function togglePanel(){ const p=document.getElementById('panel'); p.style.display=p.style.display==='none'?'block':'none';}
 function tomarFoto(){ document.getElementById('inputFoto').click(); }
-document.getElementById('inputFoto').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ lastFoto=ev.target.result; localStorage.setItem('miAutoFoto',lastFoto); const im=document.getElementById('fotoPrev'); im.src=lastFoto; im.style.display='block';}; r.readAsDataURL(f);}
+document.getElementById('inputFoto').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ lastFoto=ev.target.result; localStorage.setItem('fotoEZE',lastFoto); const im=document.getElementById('foto'); im.src=lastFoto; im.style.display='block'; }; r.readAsDataURL(f); }
+function compartir(){ const raw=localStorage.getItem('autoEZE'); if(!raw) return; const d=JSON.parse(raw); const url=`https://www.google.com/maps?q=${d.lat},${d.lng}`; const txt=`Estoy en EZEIZA ${d.playa} ${d.piso} 🚗 ${url}`; if(navigator.share) navigator.share({title:'Mi auto EZE',text:txt,url}); else window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`); }
+function pagar(){ window.open('https://www.aeropuertosargentina.com/estacionamiento-ezeiza','_blank'); }
+function borrar(){ localStorage.removeItem('autoEZE'); localStorage.removeItem('fotoEZE'); if(mAuto) map.removeLayer(mAuto); document.getElementById('panel').style.display='none'; }
 
-function compartir(){
-  const r=localStorage.getItem('miAuto'); if(!r) return alert('Primero guarda el auto');
-  const d=JSON.parse(r); const url=`https://www.google.com/maps?q=${d.lat},${d.lng}`;
-  if(navigator.share){ navigator.share({title:'Mi auto está acá',text:'Mirá donde dejé el auto 🚗',url});}
-  else{ navigator.clipboard.writeText(url); window.open(`https://wa.me/?text=${encodeURIComponent('Mi auto está acá 🚗 '+url)}`); }
-}
-
-function ponerAlarma(min){ setTimeout(()=>{ alert('⏰ ¡ALARMA! Hora de volver al auto - hace '+min+' min que lo dejaste'); if('vibrate' in navigator) navigator.vibrate([500,200,500]); }, min*60*1000); alert(`⏰ Alarma puesta en ${min} minutos`);}
-
-function borrar(){ localStorage.removeItem('miAuto'); localStorage.removeItem('miAutoFoto'); if(mAuto) map.removeLayer(mAuto); document.getElementById('panel').style.display='none'; document.getElementById('btnVer').style.display='none'; document.getElementById('btnCompass').style.display='none'; alert('Borrado');}
-
-// inicio
-try{ const r=localStorage.getItem('miAuto'); if(r){ const d=JSON.parse(r); mAuto=L.marker([d.lat,d.lng]).addTo(map); document.getElementById('btnVer').style.display='block'; document.getElementById('btnCompass').style.display='block'; const f=localStorage.getItem('miAutoFoto'); if(f){ lastFoto=f; const im=document.getElementById('fotoPrev'); im.src=f; im.style.display='block'; } } }catch(e){}
-navigator.geolocation.watchPosition(upd,null,{enableHighAccuracy:true});
+renderPisos(); updBtn();
+try{ const raw=localStorage.getItem('autoEZE'); if(raw){ const d=JSON.parse(raw); mAuto=L.marker([d.lat,d.lng]).addTo(map).bindPopup(`🚗 ${d.playa} ${d.piso}`).openPopup(); playa=d.playa; piso=d.piso; setPlaya(playa); document.getElementById('panel').style.display='block'; const f=localStorage.getItem('fotoEZE'); if(f){ document.getElementById('foto').src=f; document.getElementById('foto').style.display='block'; } } }catch(e){}
+navigator.geolocation.watchPosition(p=>{ miUb={lat:p.coords.latitude,lng:p.coords.longitude}; if(!mMio){ mMio=L.circleMarker([miUb.lat,miUb.lng],{radius:8,color:'white',fillColor:'#2196F3',fillOpacity:1,weight:3}).addTo(map);} else mMio.setLatLng([miUb.lat,miUb.lng]); },null,{enableHighAccuracy:true});
 </script>
 </body>
 </html>
