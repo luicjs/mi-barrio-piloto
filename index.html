@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi Barrio - Piloto</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css"/>
+<style>body{margin:0} #map{height:100vh} button{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1000; padding:15px 25px; background:#ff6b00; color:white; border:none; border-radius:30px; font-size:18px; font-weight:bold; cursor:pointer}</style>
+</head>
+<body>
+<div id="map"></div>
+<button id="btn">🚗 GUARDE MI AUTO ACA</button>
+<script src="https://unpkg.com/leaflet@1.9/dist/leaflet.js"></script>
+<script>
+var map = L.map('map').setView([-34.8085, -58.4755], 17);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+var auto = JSON.parse(localStorage.getItem('auto'));
+if(auto) L.marker(auto).addTo(map).bindPopup("Tu auto esta aca").openPopup();
+document.getElementById('btn').onclick = function(){
+navigator.geolocation.getCurrentPosition(pos => {
+var latlng = [pos.coords.latitude, pos.coords.longitude];
+localStorage.setItem('auto', JSON.stringify(latlng));
+L.marker(latlng).addTo(map).bindPopup("Auto guardado!").openPopup();
+alert("Auto guardado!");
+});
+}
+</script>
+</body>
+</html>
